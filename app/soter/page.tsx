@@ -1,0 +1,175 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
+import { servers } from '@/data/servers'
+import { countries } from '@/data/countries'
+import { groupServersByCountry, getCountryStats } from '@/lib/groupServers'
+import Hero from '@/components/Hero'
+import FilterBar, { Filters } from '@/components/FilterBar'
+import CountrySection from '@/components/CountrySection'
+
+const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] sm:h-[400px] lg:h-[450px] w-full rounded-lg bg-surface animate-pulse flex items-center justify-center">
+      <p className="text-sm text-gray-400">Cargando mapa...</p>
+    </div>
+  ),
+})
+
+const defaultFilters: Filters = {
+  search: '',
+  cpuBrand: '',
+  ramMin: '',
+  storageType: '',
+  location: '',
+  sortBy: 'price-asc',
+}
+
+export default function Home() {
+  const [filters, setFilters] = useState<Filters>(defaultFilters)
+
+  const allServers = servers
+
+  const availableServers = useMemo(() => {
+    return allServers.filter((s) => s.stock > 0)
+  }, [allServers])
+
+  const filteredServers = useMemo(() => {
+    let result = [...allServers]
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase()
+      result = result.filter(
+        (s) =>
+          s.cpu.toLowerCase().includes(q) ||
+          s.storage.toLowerCase().includes(q) ||
+          s.ramType.toLowerCase().includes(q) ||
+          s.bandwidth.toLowerCase().includes(q)
+      )
+    }
+
+    if (filters.cpuBrand) {
+      result = result.filter((s) => s.cpuBrand === filters.cpuBrand)
+    }
+
+    if (filters.ramMin) {
+      const min = parseInt(filters.ramMin)
+      result = result.filter((s) => s.ram >= min)
+    }
+
+    if (filters.storageType) {
+      result = result.filter((s) => s.storageType.includes(filters.storageType))
+    }
+
+    if (filters.location) {
+      result = result.filter((s) => s.location === filters.location)
+    }
+
+    switch (filters.sortBy) {
+      case 'price-asc':
+        result = [...result].sort((a, b) => a.priceMonthly - b.priceMonthly)
+        break
+      case 'price-desc':
+        result = [...result].sort((a, b) => b.priceMonthly - a.priceMonthly)
+        break
+      case 'ram-desc':
+        result = [...result].sort((a, b) => b.ram - a.ram)
+        break
+      case 'cores-desc':
+        result = [...result].sort((a, b) => b.cores - a.cores)
+        break
+      case 'stock-desc':
+        result = [...result].sort((a, b) => b.stock - a.stock)
+        break
+    }
+
+    return result
+  }, [allServers, filters])
+
+  const groupedServers = useMemo(() => {
+    return groupServersByCountry(filteredServers)
+  }, [filteredServers])
+
+  const visibleCountries = useMemo(() => {
+    if (filters.location) {
+      return countries.filter(c => c.code === filters.location)
+    }
+    return countries
+  }, [filters.location])
+
+  const priceRange = useMemo(() => {
+    if (availableServers.length === 0) return '$0'
+    const min = Math.min(...availableServers.map((s) => s.priceMonthly))
+    const max = Math.max(...availableServers.map((s) => s.priceMonthly))
+    return `$${min.toFixed(2)} - $${max.toFixed(2)}/mes`
+  }, [availableServers])
+
+  const mapData = useMemo(() => {
+    return countries.map(c => {
+      const countryServers = groupServersByCountry(availableServers).get(c.code) ?? []
+      const stats = getCountryStats(countryServers)
+      return {
+        code: c.code,
+        name: c.name,
+        count: stats.count,
+        totalStock: stats.totalStock,
+        priceRange: stats.count > 0 ? `$${stats.minPrice.toFixed(2)}/mes` : '-',
+        coordinates: c.coordinates,
+      }
+    })
+  }, [availableServers])
+
+  const hasResults = filteredServers.length > 0
+
+  return (
+    <>
+      <Hero serverCount={availableServers.length} priceRange={priceRange} />
+
+      {/* Interactive Map */}
+      <section id="mapa" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="mb-6">
+          <h2 className="font-heading font-bold text-2xl text-primary mb-2">Nuestras Ubicaciones</h2>
+          <p className="text-sm text-gray-500">Haz clic en un marcador para ver los servidores disponibles en cada ubicación.</p>
+        </div>
+        <InteractiveMap countryData={mapData} />
+      </section>
+
+      {/* Catalog */}
+      <section id="catalogo" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        <FilterBar
+          filters={filters}
+          onChange={setFilters}
+          resultCount={filteredServers.length}
+        />
+
+        {hasResults ? (
+          visibleCountries.map(country => {
+            const countryServers = groupedServers.get(country.code) ?? []
+            if (countryServers.length === 0) return null
+            return (
+              <CountrySection
+                key={country.code}
+                country={country}
+                servers={countryServers}
+              />
+            )
+          })
+        ) : (
+          <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-12 text-center">
+            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
+            </svg>
+            <h3 className="font-heading font-semibold text-lg text-primary mb-2">
+              No se encontraron servidores
+            </h3>
+            <p className="text-sm text-gray-500">
+              Intenta ajustar los filtros de búsqueda para ver más resultados.
+            </p>
+          </div>
+        )}
+      </section>
+    </>
+  )
+}
