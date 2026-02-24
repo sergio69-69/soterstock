@@ -1,14 +1,15 @@
-import Logo from './Logo'
+import Image from 'next/image'
 
 export default function Footer() {
   return (
     <footer className="bg-primary text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <div className="mb-4">
-              <Logo variant="light" />
+            <div className="flex items-center gap-2 mb-3">
+              <Image src="/logo.png" alt="SoterStock" width={36} height={36} className="w-9 h-9 object-contain" />
+              <span className="font-heading font-semibold text-lg tracking-tight text-white">SoterStock</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
               Simplificamos la gestión IT. Servidores dedicados de alto rendimiento
@@ -64,7 +65,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="border-t border-white/10 mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
             &copy; {new Date().getFullYear()} SoterStock. Todos los derechos reservados.
           </p>
