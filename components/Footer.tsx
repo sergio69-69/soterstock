@@ -8,8 +8,8 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Image src="/logo.png" alt="SoterStock" width={36} height={36} className="w-9 h-9 object-contain" />
-              <span className="font-heading font-semibold text-lg tracking-tight text-white">SoterStock</span>
+              <Image src="/logo.png" alt="SoterStock" width={52} height={52} className="w-[52px] h-[52px] object-contain" />
+              <span className="font-heading font-semibold text-xl tracking-tight text-white">SoterStock</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
               Simplificamos la gestión IT. Servidores dedicados de alto rendimiento
