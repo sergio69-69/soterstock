@@ -5,7 +5,14 @@ import StockBadge from './StockBadge'
 import OrderButton from './OrderButton'
 
 export default function ServerTable({ servers }: { servers: Server[] }) {
-  if (servers.length === 0) {
+  const sorted = [...servers].sort((a, b) => {
+    const aStock = a.stock > 0 ? 0 : 1
+    const bStock = b.stock > 0 ? 0 : 1
+    if (aStock !== bStock) return aStock - bStock
+    return a.priceMonthly - b.priceMonthly
+  })
+
+  if (sorted.length === 0) {
     return (
       <div className="bg-white rounded-[10px] shadow-sm border border-gray-100 p-12 text-center">
         <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -40,7 +47,7 @@ export default function ServerTable({ servers }: { servers: Server[] }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {servers.map((server) => (
+              {sorted.map((server) => (
                 <tr key={server.id} className="hover:bg-accent/[0.03] transition-colors group">
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
@@ -89,7 +96,7 @@ export default function ServerTable({ servers }: { servers: Server[] }) {
 
       {/* Mobile Cards */}
       <div className="lg:hidden space-y-4">
-        {servers.map((server) => (
+        {sorted.map((server) => (
           <div key={server.id} className="card p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
