@@ -11,9 +11,9 @@ export default function Logo({ variant = 'light', className = '' }: LogoProps) {
       <Image
         src="/logo.png"
         alt="SoterStock"
-        width={44}
-        height={44}
-        className="w-11 h-11"
+        width={52}
+        height={52}
+        className="w-[52px] h-[52px]"
       />
       <span className={`font-heading font-semibold text-lg tracking-tight ${variant === 'light' ? 'text-white' : 'text-primary'}`}>
         SoterStock
