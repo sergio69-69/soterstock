@@ -24,7 +24,7 @@ export default function Header() {
               Mapa
             </a>
             <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
-              Soporte
+              Documentación
             </a>
             <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
               Contacto
@@ -68,7 +68,7 @@ export default function Header() {
               Mapa
             </a>
             <a href="#" className="block text-sm text-gray-300 hover:text-white transition-colors">
-              Soporte
+              Documentación
             </a>
             <a href="#" className="block text-sm text-gray-300 hover:text-white transition-colors">
               Contacto
