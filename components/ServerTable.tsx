@@ -1,10 +1,13 @@
 'use client'
 
 import { Server } from '@/types/server'
+import { useAppSettings } from '@/lib/context/AppSettingsContext'
 import StockBadge from './StockBadge'
 import OrderButton from './OrderButton'
 
 export default function ServerTable({ servers }: { servers: Server[] }) {
+  const { t, price, priceHourly } = useAppSettings()
+
   const sorted = [...servers].sort((a, b) => {
     const aStock = a.stock > 0 ? 0 : 1
     const bStock = b.stock > 0 ? 0 : 1
@@ -19,10 +22,10 @@ export default function ServerTable({ servers }: { servers: Server[] }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
         </svg>
         <h3 className="font-heading font-semibold text-lg text-primary mb-2">
-          No se encontraron servidores
+          {t('noResults.title')}
         </h3>
         <p className="text-sm text-gray-500">
-          Intenta ajustar los filtros de búsqueda para ver más resultados.
+          {t('noResults.subtitle')}
         </p>
       </div>
     )
@@ -36,13 +39,13 @@ export default function ServerTable({ servers }: { servers: Server[] }) {
           <table className="w-full">
             <thead>
               <tr className="bg-surface border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">Procesador</th>
-                <th className="text-center px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">Cores</th>
-                <th className="text-center px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">RAM</th>
-                <th className="text-left px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">Almacenamiento</th>
-                <th className="text-left px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">Ancho de Banda</th>
-                <th className="text-center px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">Stock</th>
-                <th className="text-right px-4 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">Precio</th>
+                <th className="text-left px-4 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">{t('table.processor')}</th>
+                <th className="text-center px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">{t('table.cores')}</th>
+                <th className="text-center px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">{t('table.ram')}</th>
+                <th className="text-left px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">{t('table.storage')}</th>
+                <th className="text-left px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">{t('table.bandwidth')}</th>
+                <th className="text-center px-3 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">{t('table.stock')}</th>
+                <th className="text-right px-4 py-3 text-xs font-heading font-semibold text-primary uppercase tracking-wider">{t('table.price')}</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -79,10 +82,10 @@ export default function ServerTable({ servers }: { servers: Server[] }) {
                   </td>
                   <td className="px-4 py-4 text-right">
                     <div className="text-lg font-heading font-bold text-primary">
-                      ${server.priceMonthly.toFixed(2)}
+                      {price(server.priceMonthly)}
                     </div>
-                    <div className="text-xs text-gray-400">/mes</div>
-                    <div className="text-xs text-accent">${server.priceHourly.toFixed(3)}/hr</div>
+                    <div className="text-xs text-gray-400">{t('table.perMonth')}</div>
+                    <div className="text-xs text-accent">{priceHourly(server.priceHourly)}{t('table.perHour')}</div>
                   </td>
                   <td className="px-4 py-4">
                     <OrderButton serverId={server.id} />
@@ -112,16 +115,16 @@ export default function ServerTable({ servers }: { servers: Server[] }) {
 
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-surface rounded-lg p-2.5">
-                <div className="text-xs text-gray-500 mb-0.5">RAM</div>
+                <div className="text-xs text-gray-500 mb-0.5">{t('table.ram')}</div>
                 <div className="text-sm font-semibold text-primary">{server.ram} GB</div>
                 <div className="text-xs text-gray-400">{server.ramType}</div>
               </div>
               <div className="bg-surface rounded-lg p-2.5">
-                <div className="text-xs text-gray-500 mb-0.5">Almacenamiento</div>
+                <div className="text-xs text-gray-500 mb-0.5">{t('table.storage')}</div>
                 <div className="text-sm font-semibold text-primary">{server.storage}</div>
               </div>
               <div className="bg-surface rounded-lg p-2.5 col-span-2">
-                <div className="text-xs text-gray-500 mb-0.5">Ancho de Banda</div>
+                <div className="text-xs text-gray-500 mb-0.5">{t('table.bandwidth')}</div>
                 <div className="text-sm font-semibold text-primary">{server.bandwidth}</div>
               </div>
             </div>
@@ -129,10 +132,10 @@ export default function ServerTable({ servers }: { servers: Server[] }) {
             <div className="flex items-end justify-between pt-3 border-t border-gray-100">
               <div>
                 <div className="text-2xl font-heading font-bold text-primary">
-                  ${server.priceMonthly.toFixed(2)}
-                  <span className="text-sm font-normal text-gray-400">/mes</span>
+                  {price(server.priceMonthly)}
+                  <span className="text-sm font-normal text-gray-400">{t('table.perMonth')}</span>
                 </div>
-                <div className="text-xs text-accent">${server.priceHourly.toFixed(3)}/hr &middot; Sin IVA</div>
+                <div className="text-xs text-accent">{priceHourly(server.priceHourly)}{t('table.perHour')}</div>
               </div>
               <OrderButton serverId={server.id} />
             </div>

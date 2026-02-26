@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { servers } from '@/data/servers'
+import { useServers } from '@/lib/hooks/useServers'
 import { countries } from '@/data/countries'
 import { groupServersByCountry, getCountryStats } from '@/lib/groupServers'
+import { useAppSettings } from '@/lib/context/AppSettingsContext'
 import Hero from '@/components/Hero'
 import FilterBar, { Filters } from '@/components/FilterBar'
 import CountrySection from '@/components/CountrySection'
@@ -13,7 +14,7 @@ const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
   ssr: false,
   loading: () => (
     <div className="h-[300px] sm:h-[400px] lg:h-[450px] w-full rounded-lg bg-surface animate-pulse flex items-center justify-center">
-      <p className="text-sm text-gray-400">Cargando mapa...</p>
+      <p className="text-sm text-gray-400">...</p>
     </div>
   ),
 })
@@ -29,8 +30,9 @@ const defaultFilters: Filters = {
 
 export default function Home() {
   const [filters, setFilters] = useState<Filters>(defaultFilters)
+  const { t, price, countryName } = useAppSettings()
 
-  const allServers = servers
+  const { servers: allServers } = useServers()
 
   const availableServers = useMemo(() => {
     return allServers.filter((s) => s.stock > 0)
@@ -100,11 +102,11 @@ export default function Home() {
   }, [filters.location])
 
   const priceRange = useMemo(() => {
-    if (availableServers.length === 0) return '$0'
+    if (availableServers.length === 0) return price(0)
     const min = Math.min(...availableServers.map((s) => s.priceMonthly))
     const max = Math.max(...availableServers.map((s) => s.priceMonthly))
-    return `$${min.toFixed(2)} - $${max.toFixed(2)}/mes`
-  }, [availableServers])
+    return `${price(min)} - ${price(max)}${t('table.perMonth')}`
+  }, [availableServers, price, t])
 
   const mapData = useMemo(() => {
     return countries.map(c => {
@@ -112,14 +114,14 @@ export default function Home() {
       const stats = getCountryStats(countryServers)
       return {
         code: c.code,
-        name: c.name,
+        name: countryName(c.code),
         count: stats.count,
         totalStock: stats.totalStock,
-        priceRange: stats.count > 0 ? `$${stats.minPrice.toFixed(2)}/mes` : '-',
+        priceRange: stats.count > 0 ? `${price(stats.minPrice)}${t('table.perMonth')}` : '-',
         coordinates: c.coordinates,
       }
     })
-  }, [availableServers])
+  }, [availableServers, countryName, price, t])
 
   const hasResults = filteredServers.length > 0
 
@@ -130,8 +132,8 @@ export default function Home() {
       {/* Interactive Map */}
       <section id="mapa" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-6">
-          <h2 className="font-heading font-bold text-2xl text-primary mb-2">Nuestras Ubicaciones</h2>
-          <p className="text-sm text-gray-500">Haz clic en un marcador para ver los servidores disponibles en cada ubicación.</p>
+          <h2 className="font-heading font-bold text-2xl text-primary mb-2">{t('map.title')}</h2>
+          <p className="text-sm text-gray-500">{t('map.subtitle')}</p>
         </div>
         <InteractiveMap countryData={mapData} />
       </section>
@@ -162,10 +164,10 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
             </svg>
             <h3 className="font-heading font-semibold text-lg text-primary mb-2">
-              No se encontraron servidores
+              {t('noResults.title')}
             </h3>
             <p className="text-sm text-gray-500">
-              Intenta ajustar los filtros de búsqueda para ver más resultados.
+              {t('noResults.subtitle')}
             </p>
           </div>
         )}

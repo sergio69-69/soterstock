@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import { CountryCode } from '@/types/server'
+import { useAppSettings } from '@/lib/context/AppSettingsContext'
 
 interface MapCountryData {
   code: CountryCode
@@ -45,6 +46,8 @@ function createCustomIcon(count: number) {
 }
 
 function MapContent({ countryData }: InteractiveMapProps) {
+  const { t, countryName } = useAppSettings()
+
   useEffect(() => {
     // Fix Leaflet default marker icon issue with bundlers
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,18 +86,18 @@ function MapContent({ countryData }: InteractiveMapProps) {
         >
           <Popup>
             <div className="text-center min-w-[160px]">
-              <p className="font-heading font-bold text-primary text-base mb-1">{item.name}</p>
+              <p className="font-heading font-bold text-primary text-base mb-1">{countryName(item.code)}</p>
               <p className="text-sm text-gray-600 mb-1">
-                {item.count} {item.count === 1 ? 'servidor' : 'servidores'}
+                {item.count} {item.count === 1 ? t('map.server') : t('map.servers')}
               </p>
               <p className="text-sm text-gray-500 mb-2">
-                {item.totalStock} unidades &middot; Desde {item.priceRange}
+                {item.totalStock} {t('map.units')} &middot; {t('map.from')} {item.priceRange}
               </p>
               <button
                 onClick={() => scrollToCountry(item.code)}
                 className="btn-primary text-xs !py-1.5 !px-4 w-full"
               >
-                Ver servidores
+                {t('map.viewServers')}
               </button>
             </div>
           </Popup>

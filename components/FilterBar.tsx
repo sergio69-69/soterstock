@@ -1,5 +1,9 @@
 'use client'
 
+import { useAppSettings } from '@/lib/context/AppSettingsContext'
+import { CountryCode } from '@/types/server'
+import { countries } from '@/data/countries'
+
 export interface Filters {
   search: string
   cpuBrand: string
@@ -16,6 +20,8 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ filters, onChange, resultCount }: FilterBarProps) {
+  const { t, countryName, priceLabel } = useAppSettings()
+
   const update = (key: keyof Filters, value: string) => {
     onChange({ ...filters, [key]: value })
   }
@@ -43,7 +49,7 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
           </svg>
           <input
             type="text"
-            placeholder="Buscar por CPU, modelo o especificación..."
+            placeholder={t('filter.searchPlaceholder')}
             value={filters.search}
             onChange={(e) => update('search', e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-surface rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
@@ -58,7 +64,7 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
           onChange={(e) => update('cpuBrand', e.target.value)}
           className="px-3 py-2.5 bg-surface rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
         >
-          <option value="">Todos los CPU</option>
+          <option value="">{t('filter.allCpu')}</option>
           <option value="Intel">Intel</option>
           <option value="AMD">AMD</option>
         </select>
@@ -68,7 +74,7 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
           onChange={(e) => update('ramMin', e.target.value)}
           className="px-3 py-2.5 bg-surface rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
         >
-          <option value="">RAM (cualquiera)</option>
+          <option value="">{t('filter.ramAny')}</option>
           <option value="16">16 GB+</option>
           <option value="32">32 GB+</option>
           <option value="64">64 GB+</option>
@@ -81,7 +87,7 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
           onChange={(e) => update('storageType', e.target.value)}
           className="px-3 py-2.5 bg-surface rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
         >
-          <option value="">Almacenamiento</option>
+          <option value="">{t('filter.storage')}</option>
           <option value="NVMe SSD">NVMe SSD</option>
           <option value="SSD">SSD</option>
           <option value="HDD">HDD</option>
@@ -93,19 +99,10 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
           onChange={(e) => update('location', e.target.value)}
           className="px-3 py-2.5 bg-surface rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
         >
-          <option value="">Filtrar por País</option>
-          <option value="NL">Países Bajos</option>
-          <option value="CH">Suiza</option>
-          <option value="PL">Polonia</option>
-          <option value="IT">Italia</option>
-          <option value="ES">España</option>
-          <option value="FR">Francia</option>
-          <option value="UK">Reino Unido</option>
-          <option value="DE">Alemania</option>
-          <option value="FI">Finlandia</option>
-          <option value="US">Estados Unidos</option>
-          <option value="TR">Turquía</option>
-          <option value="RU">Rusia</option>
+          <option value="">{t('filter.filterByCountry')}</option>
+          {countries.map((c) => (
+            <option key={c.code} value={c.code}>{countryName(c.code as CountryCode)}</option>
+          ))}
         </select>
 
         <select
@@ -113,11 +110,11 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
           onChange={(e) => update('sortBy', e.target.value)}
           className="px-3 py-2.5 bg-surface rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
         >
-          <option value="price-asc">Precio: menor a mayor</option>
-          <option value="price-desc">Precio: mayor a menor</option>
-          <option value="ram-desc">RAM: mayor a menor</option>
-          <option value="cores-desc">Cores: mayor a menor</option>
-          <option value="stock-desc">Stock: mayor a menor</option>
+          <option value="price-asc">{t('filter.priceAsc')}</option>
+          <option value="price-desc">{t('filter.priceDesc')}</option>
+          <option value="ram-desc">{t('filter.ramDesc')}</option>
+          <option value="cores-desc">{t('filter.coresDesc')}</option>
+          <option value="stock-desc">{t('filter.stockDesc')}</option>
         </select>
 
         {hasActiveFilters && (
@@ -128,7 +125,7 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            Limpiar
+            {t('filter.clear')}
           </button>
         )}
       </div>
@@ -136,10 +133,10 @@ export default function FilterBar({ filters, onChange, resultCount }: FilterBarP
       {/* Result count */}
       <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          Mostrando <span className="font-semibold text-primary">{resultCount}</span> servidor{resultCount !== 1 ? 'es' : ''} disponible{resultCount !== 1 ? 's' : ''}
+          {t('filter.showing')} <span className="font-semibold text-primary">{resultCount}</span> {resultCount !== 1 ? t('filter.serversAvailable') : t('filter.serverAvailable')}
         </p>
         <p className="text-xs text-gray-400">
-          Precios en USD &middot; Sin IVA
+          {priceLabel()}
         </p>
       </div>
     </div>

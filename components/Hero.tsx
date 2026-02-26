@@ -1,4 +1,10 @@
+'use client'
+
+import { useAppSettings } from '@/lib/context/AppSettingsContext'
+
 export default function Hero({ serverCount, priceRange }: { serverCount: number; priceRange: string }) {
+  const { t } = useAppSettings()
+
   return (
     <section className="gradient-dark text-white py-10 sm:py-14 relative overflow-hidden">
       {/* Decorative elements */}
@@ -13,29 +19,29 @@ export default function Hero({ serverCount, priceRange }: { serverCount: number;
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               <span className="text-sm font-medium text-green-300">
-                {serverCount} servidores disponibles
+                {t('hero.serversAvailable', { count: serverCount })}
               </span>
             </div>
 
             <h1 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl leading-tight mb-3">
-              Servidores Dedicados
-              <span className="block text-accent">de Alto Rendimiento</span>
+              {t('hero.title1')}
+              <span className="block text-accent">{t('hero.title2')}</span>
             </h1>
 
             <p className="text-sm text-gray-400">
-              Precios desde <span className="text-white font-semibold">{priceRange}</span> &middot; Sin IVA &middot; Sin contratos de permanencia
+              {t('hero.pricesFrom')} <span className="text-white font-semibold">{priceRange}</span> &middot; {t('hero.noVat')} &middot; {t('hero.noContracts')}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <a href="#mapa" className="btn-primary text-center text-sm !px-6 !py-3">
-              Ver Ubicaciones
+              {t('hero.viewLocations')}
             </a>
             <a
               href="#catalogo"
               className="text-center border border-white/20 text-white font-heading font-medium px-6 py-3 rounded-pill transition-all duration-300 hover:bg-white/10 hover:border-white/40 text-sm"
             >
-              Explorar Catálogo
+              {t('hero.exploreCatalog')}
             </a>
           </div>
         </div>

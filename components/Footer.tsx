@@ -1,6 +1,11 @@
+'use client'
+
 import Image from 'next/image'
+import { useAppSettings } from '@/lib/context/AppSettingsContext'
 
 export default function Footer() {
+  const { t } = useAppSettings()
+
   return (
     <footer className="bg-primary text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -12,41 +17,40 @@ export default function Footer() {
               <span className="font-heading font-semibold text-2xl tracking-tight text-white">SoterStock</span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Simplificamos la gestión IT. Servidores dedicados de alto rendimiento
-              con despliegue inmediato y soporte 24/7.
+              {t('footer.description')}
             </p>
           </div>
 
           {/* Servers */}
           <div>
             <h4 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4 text-accent">
-              Servidores
+              {t('footer.servers')}
             </h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Servidores Instant</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Servidores Custom</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Servidores GPU</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Ofertas</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.serversInstant')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.serversCustom')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.serversGpu')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.offers')}</a></li>
             </ul>
           </div>
 
           {/* Company */}
           <div>
             <h4 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4 text-accent">
-              Empresa
+              {t('footer.company')}
             </h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Sobre Nosotros</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Centro de Datos</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">SLA</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contacto</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.aboutUs')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.dataCenter')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.sla')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.contact')}</a></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
             <h4 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4 text-accent">
-              Contacto
+              {t('footer.contactHeading')}
             </h4>
             <ul className="space-y-3 text-sm text-gray-400">
               <li className="flex items-center gap-2">
@@ -67,12 +71,12 @@ export default function Footer() {
 
         <div className="border-t border-white/10 mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} SoterStock. Todos los derechos reservados.
+            &copy; {new Date().getFullYear()} SoterStock. {t('footer.allRightsReserved')}
           </p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
-            <a href="#" className="hover:text-white transition-colors">Términos</a>
-            <a href="#" className="hover:text-white transition-colors">Privacidad</a>
-            <a href="#" className="hover:text-white transition-colors">Cookies</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.terms')}</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.privacy')}</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.cookies')}</a>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Server, CountryInfo } from '@/types/server'
 import { getCountryStats } from '@/lib/groupServers'
+import { useAppSettings } from '@/lib/context/AppSettingsContext'
 import CountrySummary from './CountrySummary'
 import ServerTable from './ServerTable'
 
@@ -13,6 +14,7 @@ interface CountrySectionProps {
 
 export default function CountrySection({ country, servers }: CountrySectionProps) {
   const [expanded, setExpanded] = useState(false)
+  const { price, t } = useAppSettings()
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -26,7 +28,7 @@ export default function CountrySection({ country, servers }: CountrySectionProps
   if (servers.length === 0) return null
 
   const stats = getCountryStats(servers)
-  const priceRange = `$${stats.minPrice.toFixed(2)}/mes`
+  const priceRange = `${price(stats.minPrice)}${t('table.perMonth')}`
 
   return (
     <section id={`country-${country.code}`} className="space-y-4 scroll-mt-20">
