@@ -9,6 +9,7 @@ import { useAppSettings } from '@/lib/context/AppSettingsContext'
 import Hero from '@/components/Hero'
 import FilterBar, { Filters } from '@/components/FilterBar'
 import CountrySection from '@/components/CountrySection'
+import CountryFlag from '@/components/CountryFlag'
 
 const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
   ssr: false,
@@ -22,8 +23,10 @@ const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
 const defaultFilters: Filters = {
   search: '',
   cpuBrand: '',
+  coresMin: '',
   ramMin: '',
   storageType: '',
+  storageMin: '',
   location: '',
   sortBy: 'price-asc',
 }
@@ -34,12 +37,12 @@ export default function Home() {
 
   const { servers: allServers } = useServers()
 
-  const availableServers = useMemo(() => {
+  const inStockServers = useMemo(() => {
     return allServers.filter((s) => s.stock > 0)
   }, [allServers])
 
   const filteredServers = useMemo(() => {
-    let result = [...allServers]
+    let result = [...inStockServers]
 
     if (filters.search) {
       const q = filters.search.toLowerCase()
@@ -56,6 +59,11 @@ export default function Home() {
       result = result.filter((s) => s.cpuBrand === filters.cpuBrand)
     }
 
+    if (filters.coresMin) {
+      const min = parseInt(filters.coresMin)
+      result = result.filter((s) => s.cores >= min)
+    }
+
     if (filters.ramMin) {
       const min = parseInt(filters.ramMin)
       result = result.filter((s) => s.ram >= min)
@@ -63,6 +71,11 @@ export default function Home() {
 
     if (filters.storageType) {
       result = result.filter((s) => s.storageType.includes(filters.storageType))
+    }
+
+    if (filters.storageMin) {
+      const min = parseInt(filters.storageMin)
+      result = result.filter((s) => s.storageCapacity >= min)
     }
 
     if (filters.location) {
@@ -88,7 +101,7 @@ export default function Home() {
     }
 
     return result
-  }, [allServers, filters])
+  }, [inStockServers, filters])
 
   const groupedServers = useMemo(() => {
     return groupServersByCountry(filteredServers)
@@ -102,15 +115,15 @@ export default function Home() {
   }, [filters.location])
 
   const priceRange = useMemo(() => {
-    if (availableServers.length === 0) return price(0)
-    const min = Math.min(...availableServers.map((s) => s.priceMonthly))
-    const max = Math.max(...availableServers.map((s) => s.priceMonthly))
+    if (inStockServers.length === 0) return price(0)
+    const min = Math.min(...inStockServers.map((s) => s.priceMonthly))
+    const max = Math.max(...inStockServers.map((s) => s.priceMonthly))
     return `${price(min)} - ${price(max)}${t('table.perMonth')}`
-  }, [availableServers, price, t])
+  }, [inStockServers, price, t])
 
   const mapData = useMemo(() => {
     return countries.map(c => {
-      const countryServers = groupServersByCountry(availableServers).get(c.code) ?? []
+      const countryServers = groupServersByCountry(inStockServers).get(c.code) ?? []
       const stats = getCountryStats(countryServers)
       return {
         code: c.code,
@@ -121,13 +134,13 @@ export default function Home() {
         coordinates: c.coordinates,
       }
     })
-  }, [availableServers, countryName, price, t])
+  }, [inStockServers, countryName, price, t])
 
   const hasResults = filteredServers.length > 0
 
   return (
     <>
-      <Hero serverCount={availableServers.length} priceRange={priceRange} />
+      <Hero serverCount={inStockServers.length} priceRange={priceRange} />
 
       {/* Interactive Map */}
       <section id="mapa" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -136,6 +149,35 @@ export default function Home() {
           <p className="text-sm text-gray-500">{t('map.subtitle')}</p>
         </div>
         <InteractiveMap countryData={mapData} />
+
+        {/* Country flags bar */}
+        {mapData.filter(c => c.count > 0).length > 0 && (
+          <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+            {mapData
+              .filter(c => c.count > 0)
+              .sort((a, b) => b.count - a.count)
+              .map(c => (
+                <button
+                  key={c.code}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('expand-country', { detail: c.code }))
+                    document.getElementById(`country-${c.code}`)?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="flex items-center gap-2.5 px-4 py-2.5 bg-white border border-gray-200 rounded-full shadow-sm hover:shadow-md hover:border-accent transition-all duration-200 group"
+                >
+                  <CountryFlag code={c.code} size={28} className="rounded-sm" />
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-semibold text-primary leading-tight group-hover:text-accent transition-colors">
+                      {c.name}
+                    </span>
+                    <span className="text-[11px] text-gray-400 leading-tight">
+                      {c.count} {c.count === 1 ? t('map.server') : t('map.servers')}
+                    </span>
+                  </div>
+                </button>
+              ))}
+          </div>
+        )}
       </section>
 
       {/* Catalog */}

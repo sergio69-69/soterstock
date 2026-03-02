@@ -6,6 +6,21 @@ interface LogoProps {
 }
 
 export default function Logo({ variant = 'light', className = '' }: LogoProps) {
+  if (variant === 'light') {
+    return (
+      <div className={`flex items-center ${className}`}>
+        <Image
+          src="/logo-white.png"
+          alt="SoterStock"
+          width={180}
+          height={48}
+          className="h-10 w-auto object-contain"
+          priority
+        />
+      </div>
+    )
+  }
+
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <Image
@@ -15,7 +30,7 @@ export default function Logo({ variant = 'light', className = '' }: LogoProps) {
         height={76}
         className="w-[76px] h-[76px] object-contain"
       />
-      <span className={`font-heading font-semibold text-lg tracking-tight ${variant === 'light' ? 'text-white' : 'text-primary'}`}>
+      <span className="font-heading font-semibold text-lg tracking-tight text-primary">
         SoterStock
       </span>
     </div>

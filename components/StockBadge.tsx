@@ -7,9 +7,9 @@ export default function StockBadge({ stock }: { stock: number }) {
 
   if (stock <= 0) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
-        {t('stock.outOfStock')}
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
+        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+        {t('stock.onDemand')}
       </span>
     )
   }

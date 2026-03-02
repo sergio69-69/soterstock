@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { useEffect, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { CountryCode } from '@/types/server'
 import { useAppSettings } from '@/lib/context/AppSettingsContext'
@@ -19,34 +19,73 @@ interface InteractiveMapProps {
   countryData: MapCountryData[]
 }
 
-function createCustomIcon(count: number) {
+function getScale(zoom: number) {
+  if (zoom <= 2) return 0.7
+  if (zoom <= 3) return 0.85
+  if (zoom <= 4) return 1
+  return 1.15
+}
+
+function createFlagIcon(code: string, totalStock: number, zoom: number) {
+  const s = getScale(zoom)
+  const fw = Math.round(36 * s)
+  const fh = Math.round(26 * s)
+  const bw = Math.round(20 * s)
+  const bh = Math.round(20 * s)
+  const fs = Math.round(10 * s)
+  const br = Math.round(4 * s)
+  const tw = fw + 12
+  const th = fh + 8
+
   return L.divIcon({
     className: '',
     html: `
-      <div style="
-        background: #0C2C4D;
-        color: white;
-        border: 3px solid #569EE6;
-        border-radius: 50%;
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 14px;
-        font-family: 'Poppins', sans-serif;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      ">${count}</div>
+      <div style="position:relative; width:${tw}px; height:${th}px;">
+        <img src="/flags/${code}.svg" style="
+          width:${fw}px;
+          height:${fh}px;
+          border-radius:${br}px;
+          border:2px solid white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+          object-fit: cover;
+          display:block;
+        " />
+        <div style="
+          position:absolute;
+          bottom:-6px;
+          right:-6px;
+          background:#0C2C4D;
+          color:white;
+          border:2px solid white;
+          border-radius:50%;
+          width:${bw}px;
+          height:${bh}px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:${fs}px;
+          font-weight:700;
+          font-family:'Poppins',sans-serif;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        ">${totalStock}</div>
+      </div>
     `,
-    iconSize: [44, 44],
-    iconAnchor: [22, 22],
-    popupAnchor: [0, -24],
+    iconSize: [tw, th],
+    iconAnchor: [tw / 2, th / 2],
+    popupAnchor: [0, -(th / 2 + 4)],
   })
+}
+
+function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
+  useMapEvents({
+    zoomend: (e) => onZoom(e.target.getZoom()),
+  })
+  return null
 }
 
 function MapContent({ countryData }: InteractiveMapProps) {
   const { t, countryName } = useAppSettings()
+  const [zoom, setZoom] = useState(2)
 
   useEffect(() => {
     // Fix Leaflet default marker icon issue with bundlers
@@ -74,15 +113,16 @@ function MapContent({ countryData }: InteractiveMapProps) {
       className="h-[300px] sm:h-[400px] lg:h-[450px] w-full rounded-lg"
       style={{ background: '#E2E8F0' }}
     >
+      <ZoomTracker onZoom={setZoom} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {countryData.map((item) => (
+      {countryData.filter((item) => item.count > 0).map((item) => (
         <Marker
           key={item.code}
           position={item.coordinates}
-          icon={createCustomIcon(item.count)}
+          icon={createFlagIcon(item.code, item.count, zoom)}
         >
           <Popup>
             <div className="text-center min-w-[160px]">

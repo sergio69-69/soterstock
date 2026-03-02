@@ -1,9 +1,5 @@
 import { Server, CountryCode } from '@/types/server'
 
-const SUPPORTED_LOCATIONS = new Set<string>([
-  'NL', 'CH', 'PL', 'IT', 'ES', 'FR', 'UK', 'DE', 'FI', 'US', 'TR', 'RU',
-])
-
 interface HostkeyTag {
   tag: string
   value: string
@@ -68,7 +64,6 @@ function parseStorageType(storageStr: string): Server['storageType'] {
 }
 
 function parseStorageCapacity(hdd: string): number {
-  // Formats: "1000", "2x960", "2x1920", "2x3840"
   const match = hdd.match(/^(\d+)x(\d+)$/)
   if (match) {
     return parseInt(match[1]) * parseInt(match[2])
@@ -81,11 +76,18 @@ function inferCategory(preset: HostkeyPreset): Server['category'] {
   return 'instant'
 }
 
-export function transformPresets(apiResponse: HostkeyResponse): Server[] {
+/**
+ * Transform presets from the Hostkey API for a specific location.
+ * When called with filter=yes&location=XX, the `available` field
+ * returns the real per-location stock count.
+ */
+export function transformPresetsForLocation(
+  apiResponse: HostkeyResponse,
+  location: CountryCode
+): Server[] {
   const servers: Server[] = []
 
   for (const preset of apiResponse.presets) {
-    // Only physical servers (virtual=0), active
     if (preset.virtual !== 0 || preset.active !== 1) continue
 
     const tags = preset.tags || []
@@ -96,6 +98,9 @@ export function transformPresets(apiResponse: HostkeyResponse): Server[] {
 
     if (!cpuName) continue
 
+    const prices = preset.price[location]
+    if (!prices || prices.EUR <= 0) continue
+
     const cpuBrand = inferCpuBrand(cpuName)
     const ramType = inferRamType(preset)
     const storageType = parseStorageType(storageTag)
@@ -103,34 +108,28 @@ export function transformPresets(apiResponse: HostkeyResponse): Server[] {
     const category = inferCategory(preset)
     const cores = preset.cpu
     const threads = cores * 2
+    const eur = prices.EUR
 
-    // Expand each location with valid EUR pricing into a Server entry
-    for (const [loc, prices] of Object.entries(preset.price)) {
-      if (!SUPPORTED_LOCATIONS.has(loc)) continue
-      const eur = prices.EUR
-      if (eur <= 0) continue
-
-      servers.push({
-        id: `${preset.name}-${loc}`,
-        cpu: cpuName,
-        cpuBrand,
-        cores,
-        threads,
-        clockSpeed: clockSpeed ? `${clockSpeed} GHz` : '',
-        ram: preset.ram,
-        ramType,
-        storage: storageTag || `${preset.hdd} GB`,
-        storageType,
-        storageCapacity,
-        bandwidth: bandwidthTag || '1Gbps / 50TB',
-        location: loc as CountryCode,
-        priceMonthly: eur,
-        priceHourly: Math.round((eur / 730) * 10000) / 10000,
-        stock: preset.available,
-        category,
-        ...(preset.gpu ? { gpu: preset.gpu } : {}),
-      })
-    }
+    servers.push({
+      id: `${preset.name}-${location}`,
+      cpu: cpuName,
+      cpuBrand,
+      cores,
+      threads,
+      clockSpeed: clockSpeed ? `${clockSpeed} GHz` : '',
+      ram: preset.ram,
+      ramType,
+      storage: storageTag || `${preset.hdd} GB`,
+      storageType,
+      storageCapacity,
+      bandwidth: bandwidthTag || '1Gbps / 50TB',
+      location,
+      priceMonthly: eur,
+      priceHourly: Math.round((eur / 730) * 10000) / 10000,
+      stock: preset.available,
+      category,
+      ...(preset.gpu ? { gpu: preset.gpu } : {}),
+    })
   }
 
   return servers

@@ -22,8 +22,10 @@ const InteractiveMap = dynamic(() => import('@/components/InteractiveMap'), {
 const defaultFilters: Filters = {
   search: '',
   cpuBrand: '',
+  coresMin: '',
   ramMin: '',
   storageType: '',
+  storageMin: '',
   location: '',
   sortBy: 'price-asc',
 }
@@ -34,12 +36,12 @@ export default function Home() {
 
   const { servers: allServers } = useServers()
 
-  const availableServers = useMemo(() => {
+  const inStockServers = useMemo(() => {
     return allServers.filter((s) => s.stock > 0)
   }, [allServers])
 
   const filteredServers = useMemo(() => {
-    let result = [...allServers]
+    let result = [...inStockServers]
 
     if (filters.search) {
       const q = filters.search.toLowerCase()
@@ -56,6 +58,11 @@ export default function Home() {
       result = result.filter((s) => s.cpuBrand === filters.cpuBrand)
     }
 
+    if (filters.coresMin) {
+      const min = parseInt(filters.coresMin)
+      result = result.filter((s) => s.cores >= min)
+    }
+
     if (filters.ramMin) {
       const min = parseInt(filters.ramMin)
       result = result.filter((s) => s.ram >= min)
@@ -63,6 +70,11 @@ export default function Home() {
 
     if (filters.storageType) {
       result = result.filter((s) => s.storageType.includes(filters.storageType))
+    }
+
+    if (filters.storageMin) {
+      const min = parseInt(filters.storageMin)
+      result = result.filter((s) => s.storageCapacity >= min)
     }
 
     if (filters.location) {
@@ -88,7 +100,7 @@ export default function Home() {
     }
 
     return result
-  }, [allServers, filters])
+  }, [inStockServers, filters])
 
   const groupedServers = useMemo(() => {
     return groupServersByCountry(filteredServers)
@@ -102,15 +114,15 @@ export default function Home() {
   }, [filters.location])
 
   const priceRange = useMemo(() => {
-    if (availableServers.length === 0) return price(0)
-    const min = Math.min(...availableServers.map((s) => s.priceMonthly))
-    const max = Math.max(...availableServers.map((s) => s.priceMonthly))
+    if (inStockServers.length === 0) return price(0)
+    const min = Math.min(...inStockServers.map((s) => s.priceMonthly))
+    const max = Math.max(...inStockServers.map((s) => s.priceMonthly))
     return `${price(min)} - ${price(max)}${t('table.perMonth')}`
-  }, [availableServers, price, t])
+  }, [inStockServers, price, t])
 
   const mapData = useMemo(() => {
     return countries.map(c => {
-      const countryServers = groupServersByCountry(availableServers).get(c.code) ?? []
+      const countryServers = groupServersByCountry(inStockServers).get(c.code) ?? []
       const stats = getCountryStats(countryServers)
       return {
         code: c.code,
@@ -121,13 +133,13 @@ export default function Home() {
         coordinates: c.coordinates,
       }
     })
-  }, [availableServers, countryName, price, t])
+  }, [inStockServers, countryName, price, t])
 
   const hasResults = filteredServers.length > 0
 
   return (
     <>
-      <Hero serverCount={availableServers.length} priceRange={priceRange} />
+      <Hero serverCount={inStockServers.length} priceRange={priceRange} />
 
       {/* Interactive Map */}
       <section id="mapa" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
